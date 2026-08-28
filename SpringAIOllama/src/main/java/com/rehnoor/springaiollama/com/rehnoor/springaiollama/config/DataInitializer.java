@@ -6,12 +6,15 @@ import org.springframework.ai.reader.TextReader;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
 public class DataInitializer {
+
+
     @Autowired
     private VectorStore vectorStore;
 
