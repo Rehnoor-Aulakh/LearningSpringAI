@@ -7,7 +7,9 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.ollama.OllamaChatModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +18,11 @@ import java.util.Map;
 @RestController
 public class OllamaController {
 
+    @Autowired
+    private EmbeddingModel embeddingModel;
+
     private ChatClient chatClient;
+
 
 //    public OllamaController(OllamaChatModel chatModel) {
 //        this.chatClient= ChatClient.create(chatModel);
@@ -54,6 +60,13 @@ public class OllamaController {
                     looking for movie around this year {year}.
                     The language I am looking for is {lang}.
                     Suggest one movie and tell me the cast and length of the movie.
+                    
+                    response format should be:
+                    1. Movie Name
+                    2. basic plot
+                    3. cast
+                    4. length
+                    5. IMDb Rating
                 """;
         PromptTemplate promptTemplate = new PromptTemplate(tempt);
         Prompt prompt = promptTemplate.create(Map.of("type" , type, "year", year, "lang" , lang));
@@ -63,6 +76,11 @@ public class OllamaController {
                 .call()
                 .content();
         return response;
+    }
+
+    @PostMapping("/api/embedding")
+    public float[] embedding(@RequestParam String text) {
+        return embeddingModel.embed(text);
     }
 
 }
