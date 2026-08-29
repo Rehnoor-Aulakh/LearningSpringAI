@@ -1,11 +1,13 @@
 package com.rehnoor.springaiollama.controller;
 
+import com.rehnoor.springaiollama.Movie;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.converter.ListOutputConverter;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -53,4 +55,26 @@ public class MovieController {
         );
         return movies;
     }
+
+    @GetMapping("/movie")
+     public Movie getMovieData(@RequestParam String name) {
+        String message = """
+                    Get me the best movie of {name}
+                    {format}
+                """;
+        BeanOutputConverter<Movie> outputConverter = new BeanOutputConverter<>(Movie.class );
+
+        PromptTemplate template = PromptTemplate.builder().template(message).variables(Map.of("name", name, "format", outputConverter.getFormat())).build();
+        Prompt prompt = template.create();
+        Movie movie = outputConverter.convert(
+                chatClient.prompt(prompt)
+                        .advisors(a -> a.param(
+                                ChatMemory.CONVERSATION_ID,
+                                "user1"
+                        ))
+                        .call()
+                        .content()
+        );
+        return movie;
+     }
 }
