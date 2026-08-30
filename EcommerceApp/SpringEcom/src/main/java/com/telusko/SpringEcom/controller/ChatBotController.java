@@ -1,19 +1,24 @@
 package com.telusko.SpringEcom.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.telusko.SpringEcom.service.ChatBotService;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/chat")
 @CrossOrigin
 public class ChatBotController {
 
+    @Autowired
+    private ChatBotService chatBotService;
+
     @GetMapping("/ask")
-    public ResponseEntity<String> askBot(@RequestParam String message) {
-        String response = """
-                
-                """;
-        return ResponseEntity.ok(message);
+    public ResponseEntity<String> askBot(@RequestParam String message) throws IOException {
+        String response = chatBotService.getBotResponse(message);
+        return ResponseEntity.ok(response);
     }
 
 }
