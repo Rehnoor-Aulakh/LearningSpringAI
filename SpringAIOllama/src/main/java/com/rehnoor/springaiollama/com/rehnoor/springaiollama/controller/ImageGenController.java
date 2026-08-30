@@ -8,11 +8,12 @@ import org.springframework.ai.image.*;
 import org.springframework.ai.stabilityai.StabilityAiImageModel;
 import org.springframework.ai.stabilityai.StyleEnum;
 import org.springframework.ai.stabilityai.api.StabilityAiImageOptions;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.util.MimeTypeUtils;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.Base64;
 
 @RestController
@@ -43,6 +44,15 @@ public class ImageGenController {
         }
         
         return ResponseEntity.ok(response.getResult().getOutput().getUrl());
+    }
+
+    @PostMapping("/image/describe")
+    public String describeImage(@RequestParam String query, @RequestParam MultipartFile file) {
+        return chatClient.prompt()
+                .user(us -> us.text(query).media(MimeTypeUtils.IMAGE_PNG, file.getResource()))
+                .call()
+                .content();
+
     }
 
 }
