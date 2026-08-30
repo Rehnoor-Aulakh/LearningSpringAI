@@ -15,8 +15,6 @@ import redis.clients.jedis.RedisClient;
 @Configuration
 public class AppConfig {
 
-
-
     @Bean
     public RedisClient jedisClient() {
         return RedisClient.builder().hostAndPort("localhost", 6379).build();

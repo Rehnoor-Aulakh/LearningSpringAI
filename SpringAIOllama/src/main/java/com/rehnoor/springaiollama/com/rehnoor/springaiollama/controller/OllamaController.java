@@ -68,7 +68,7 @@ public class OllamaController {
                     looking for movie around this year {year}.
                     The language I am looking for is {lang}.
                     Suggest one movie and tell me the cast and length of the movie.
-                    
+                
                     response format should be:
                     1. Movie Name
                     2. basic plot
