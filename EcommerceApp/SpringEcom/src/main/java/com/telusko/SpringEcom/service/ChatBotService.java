@@ -60,17 +60,22 @@ public class ChatBotService {
     }
 
     private String fetchSemanticContext(String userQuery) {
+        System.out.println("==== VECTOR SEARCH DEBUG ====");
+        System.out.println("User query: " + userQuery);
         List<Document> documents = vectorStore.similaritySearch(
                 SearchRequest.builder()
                         .query(userQuery)
                         .topK(5)
-                        .similarityThreshold(0.7f)
+                        .similarityThreshold(0.3)
                         .build()
         );
+        System.out.println("Documents found: " + documents.size());
         StringBuilder context = new StringBuilder();
         for(Document document: documents) {
+            System.out.println("Doc: " + document.getFormattedContent());
             context.append(document.getFormattedContent()).append("\n");
         }
+        System.out.println("==== END DEBUG ====");
         return context.toString();
     }
 }
