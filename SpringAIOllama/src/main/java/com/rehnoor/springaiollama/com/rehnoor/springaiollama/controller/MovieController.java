@@ -12,6 +12,7 @@ import org.springframework.ai.converter.ListOutputConverter;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -77,4 +78,29 @@ public class MovieController {
         );
         return movie;
      }
+    @GetMapping("/moviesList")
+    public List<Movie> getMoviesList(@RequestParam String name) {
+        String message = """
+                    Top 5 movies of {name}
+                    {format}
+                """;
+        BeanOutputConverter<List<Movie>> outputConverter = new BeanOutputConverter<>(
+                new ParameterizedTypeReference<List<Movie>>() {
+
+                }
+        );
+
+        PromptTemplate template = PromptTemplate.builder().template(message).variables(Map.of("name", name, "format", outputConverter.getFormat())).build();
+        Prompt prompt = template.create();
+        List<Movie> movies = outputConverter.convert(
+                chatClient.prompt(prompt)
+                        .advisors(a -> a.param(
+                                ChatMemory.CONVERSATION_ID,
+                                "user1"
+                        ))
+                        .call()
+                        .content()
+        );
+        return movies;
+    }
 }
