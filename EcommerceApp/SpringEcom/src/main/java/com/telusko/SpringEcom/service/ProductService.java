@@ -48,7 +48,6 @@ public class ProductService {
 
         Product savedProduct = productRepo.save(product);
 
-        // TODO: Logic to save the embedding of this product
         String content = String.format("""
                 Product Name: %s
                 Description: %s

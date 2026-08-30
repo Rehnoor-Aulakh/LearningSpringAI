@@ -9,6 +9,8 @@ import com.telusko.SpringEcom.model.dto.OrderRequest;
 import com.telusko.SpringEcom.model.dto.OrderResponse;
 import com.telusko.SpringEcom.repo.OrderRepo;
 import com.telusko.SpringEcom.repo.ProductRepo;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -26,6 +29,9 @@ public class OrderService {
     private ProductRepo productRepo;
     @Autowired
     private OrderRepo orderRepo;
+
+    @Autowired
+    private PgVectorStore vectorStore;
 
     public OrderResponse placeOrder(OrderRequest request) {
 
@@ -44,7 +50,39 @@ public class OrderService {
                     .orElseThrow(() -> new RuntimeException("Product not found"));
 
             product.setStockQuantity(product.getStockQuantity() - itemReq.quantity());
-            productRepo.save(product);
+            Product savedProduct = productRepo.save(product);
+            // TODO: Make the change in vector database also, delete the existing document with that id,
+            // and insert the new document
+
+            String filter = String.format("productId == %s", String.valueOf(product.getId()));
+            vectorStore.delete(filter);
+
+            // provide the new entry
+            String updatedContent = String.format("""
+                Product Name: %s
+                Description: %s
+                Brand: %s
+                Category: %s
+                Price: %.2f
+                Release Date: %s
+                Available: %s
+                Stock: %d
+                """,
+                    savedProduct.getName(),
+                    savedProduct.getDescription(),
+                    savedProduct.getBrand(),
+                    savedProduct.getCategory(),
+                    savedProduct.getPrice(),
+                    savedProduct.getReleaseDate(),
+                    savedProduct.isProductAvailable(),
+                    savedProduct.getStockQuantity()
+            );
+            Document updatedDocument = new Document(
+                    UUID.randomUUID().toString(),
+                    updatedContent,
+                    Map.of("productId", String.valueOf(savedProduct.getId()))
+            );
+            vectorStore.add(List.of(updatedDocument));
 
             OrderItem orderItem = OrderItem.builder()
                     .product(product)
@@ -58,6 +96,28 @@ public class OrderService {
 
         order.setOrderItems(orderItems);
         Order savedOrder = orderRepo.save(order);
+
+        StringBuilder content = new StringBuilder();
+        content.append("Order Summary:\n");
+        content.append("Order ID: ").append(savedOrder.getOrderId()).append("\n");
+        content.append("Customer: ").append(savedOrder.getCustomerName()).append("\n");
+        content.append("Email: ").append(savedOrder.getEmail()).append("\n");
+        content.append("Date: ").append(savedOrder.getOrderDate()).append("\n");
+        content.append("Status: ").append(savedOrder.getStatus()).append("\n");
+        content.append("Products: \n");
+
+        for(OrderItem orderItem: orderItems) {
+            content.append("- ").append(orderItem.getProduct().getName())
+                    .append(" x ").append(orderItem.getQuantity())
+                    .append(" = ").append(orderItem.getTotalPrice()).append("\n");
+        }
+
+        Document document = new Document(
+                UUID.randomUUID().toString(),
+                content.toString(),
+                Map.of("orderId", savedOrder.getOrderId())
+        );
+        vectorStore.add(List.of(document));
 
         List<OrderItemResponse> itemResponses = new ArrayList<>();
         for (OrderItem item : order.getOrderItems()) {
