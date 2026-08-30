@@ -3,7 +3,9 @@ package com.telusko.SpringEcom.service;
 import com.telusko.SpringEcom.model.Product;
 import com.telusko.SpringEcom.repo.ProductRepo;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.stabilityai.StabilityAiImageModel;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,6 +21,9 @@ public class ProductService {
 
     @Autowired
     private ChatClient chatClient;
+
+    @Autowired
+    private com.telusko.SpringEcom.service.AiImageGenService aiImageGenService;
 
     public List<Product> getAllProducts() {
         return productRepo.findAll();
@@ -70,5 +75,30 @@ public class ProductService {
                  .getOutput()
                  .getText();
          return description;
+    }
+
+    public byte[] generateImage(String name, String category, String description) throws Exception {
+        String imagePrompt = String.format("""
+                    Generate a highly realistic, professional grade e-commerce product image.
+                    
+                    Product Details:
+                    - Category: %s
+                    - Name: %s
+                    - Description: %s
+                    
+                    Requirements:
+                    - Use a clean, minimalistic, white or very light grey background.
+                    - Ensure the product is well-lit with soft, natural looking lighting.
+                    - Add realistic product shadows and soft reflections to ground the product naturally.
+                    - No humans, brand logos, watermarks, or text overlays should be visible.
+                    - Showcase the product from its most flattering angle that highlights the key features
+                    - Ensure the product occupies a prominent position in the frame, centered or slightly off-centered.
+                     - Maintain a high resolution and sharpness, ensuring all textures, colors, and details are clear.
+                     - Follow the typical visual style of top e-commerce websites like Amazon, Flipkart, or Shopify.
+                     - Make the product appear life-like and professionally photographed in a studio setup.
+                     - The final image should look immediately ready for use on an e-commerce website without further editing.
+                     """, category, name, description);
+        byte[] aiImage = aiImageGenService.generateAIImage(imagePrompt);
+        return aiImage;
     }
 }
