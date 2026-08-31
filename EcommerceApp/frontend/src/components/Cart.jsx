@@ -3,6 +3,7 @@ import AppContext from "../Context/Context";
 import axios from "axios";
 import CheckoutPopup from "./CheckoutPopup";
 import { Button } from 'react-bootstrap';
+import unplugged from "../assets/unplugged.png";
 
 const Cart = () => {
   const { cart, removeFromCart, clearCart } = useContext(AppContext);

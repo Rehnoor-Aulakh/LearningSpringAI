@@ -2,6 +2,7 @@ import axios from 'axios';
 import React, { useState } from 'react';
 import { Modal, Button, Form, Alert, Toast, ToastContainer } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import unplugged from "../assets/unplugged.png";
 
 const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice }) => {
   const baseUrl = import.meta.env.VITE_BASE_URL;
